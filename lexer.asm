@@ -6,10 +6,17 @@
 
             copy    tokens.inc.asm
 
+*
+* next
+*
 next        start
             using   input_area
             using   lexer_data
-            csub    ,0
+
+            csub    (2:inputptr),10
+test        equ     1
+            lda     test
+            lda     >inputptr
 
             ret
             rtl
@@ -59,6 +66,10 @@ tokentable  anop
             dc      i1'T_GREATER'
             dw      '<'
             dc      i1'T_LESSTHAN'
+            dw      '{'
+            dc      i1'T_LCURLY'
+            dw      '}'
+            dc      i1'T_RCURLY'
             dw      '++'
             dc      i1'T_PLUSPLUS'
             dw      '--'
