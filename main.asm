@@ -10,6 +10,7 @@ main        start
             jsr     init
 
             puts    #'Hello, world.',cr=t
+            pea     $1234
             jsl     next
             puts    #'Shutting down...',cr=t
             jsr     shutdown

@@ -14,9 +14,6 @@ next        start
             using   lexer_data
 
             csub    (2:inputptr),10
-test        equ     1
-            lda     test
-            lda     >inputptr
 
             ret
             rtl
@@ -70,6 +67,8 @@ tokentable  anop
             dc      i1'T_LCURLY'
             dw      '}'
             dc      i1'T_RCURLY'
+            dw      '#'
+            dc      i1'T_HASH'
             dw      '++'
             dc      i1'T_PLUSPLUS'
             dw      '--'
