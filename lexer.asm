@@ -97,6 +97,8 @@ tokentable  anop
             dc      i1'T_LSHIFT'
             dw      '>>'
             dc      i1'T_RSHIFT'
+            dw      '!='
+            dc      i1'T_NOTEQUAL'
             dw      'do'
             dc      I1'T_DO'
             dw      'if'
