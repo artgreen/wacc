@@ -28,5 +28,6 @@ shutdown    jsl     SysIOShutDown
 
 input_area  data
 buffer      dc      c'int main(void) { return 0; }'
+            dc      i1'0'
             end     ; input_area
 
