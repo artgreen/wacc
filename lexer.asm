@@ -13,7 +13,7 @@ next        start
             using   input_area
             using   lexer_data
 
-            ldx     #$0             ; start at bye 0
+            ldx     #$0             ; start at byte 0
 loop        lda     buffer,x        ; get a byte from buffer
             beq     bye             ; if null, bail
             pha                     ; save C
