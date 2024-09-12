@@ -5,14 +5,17 @@
             mcopy   m16.ORCA
 
 main        start
+            using   input_area
             phk
             plb
             jsr     init
 
-            puts    #'Hello, world.',cr=t
-            pea     $1234
+;            puts    #'Hello, world.',cr=t
+;             pea     buffer
+            ldy     #$1001
             jsl     next
-            puts    #'Shutting down...',cr=t
+            ldy     #$1002
+;            puts    #'Shutting down...',cr=t
             jsr     shutdown
             lda     #0
             rtl
@@ -29,5 +32,6 @@ shutdown    jsl     SysIOShutDown
 input_area  data
 buffer      dc      c'int main(void) { return 0; }'
             dc      i1'0'
+nextword    dc      i4'0'
             end     ; input_area
 

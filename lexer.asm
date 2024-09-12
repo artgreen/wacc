@@ -13,10 +13,24 @@ next        start
             using   input_area
             using   lexer_data
 
-            csub    (2:inputptr),10
-
-            ret
-            rtl
+            ldx     #$0             ; start at bye 0
+loop        lda     buffer,x        ; get a byte from buffer
+            beq     bye             ; if null, bail
+            pha                     ; save C
+            pha                     ; push C for print
+            jsl     SysCharOut      ; print
+            pla                     ; pull C
+            xba                     ; swap bytes in C
+            beq     bye             ; if null, bail
+            pha                     ; push C
+            jsl     SysCharOut      ; print
+            inx                     ; x += 2
+            inx
+            bne     loop            ; unless we've wrapped, loop
+bye         lda     #$0D            ; load ^M
+            pha                     ; push C
+            jsl     SysCharOut      ; print
+            rtl                     ; return to caller
             end     ; next
 
 lexer_data  data
@@ -99,6 +113,8 @@ tokentable  anop
             dc      i1'T_RSHIFT'
             dw      '!='
             dc      i1'T_NOTEQUAL'
+            dw      '->'
+            dc      i1'T_DEREF'
             dw      'do'
             dc      I1'T_DO'
             dw      'if'
