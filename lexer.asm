@@ -4,17 +4,19 @@
             65816   on
             mcopy   m16.ORCA
 
+            list    off
             copy    tokens.inc.asm
+            list    on
 
 *
 * next
 *
 next        start
-            using   input_area
             using   lexer_data
 
-            ldx     #$0             ; start at byte 0
-loop        lda     buffer,x        ; get a byte from buffer
+            csub     (2:iptr),0
+            ldy     #$0             ; start at byte 0
+loop        lda     (iptr+2,S),y    ; get a byte from buffer
             beq     bye             ; if null, bail
             pha                     ; save C
             pha                     ; push C for print
@@ -24,15 +26,16 @@ loop        lda     buffer,x        ; get a byte from buffer
             beq     bye             ; if null, bail
             pha                     ; push C
             jsl     SysCharOut      ; print
-            inx                     ; x += 2
-            inx
+            iny                     ; x += 2
+            iny
             bne     loop            ; unless we've wrapped, loop
 bye         lda     #$0D            ; load ^M
             pha                     ; push C
             jsl     SysCharOut      ; print
-            rtl                     ; return to caller
+            ret
             end     ; next
 
+            list    off
 lexer_data  data
 tokentable  anop
             dw      '+'

@@ -11,7 +11,7 @@ main        start
             jsr     init
 
 ;            puts    #'Hello, world.',cr=t
-;             pea     buffer
+            pea     buffer
             ldy     #$1001
             jsl     next
             ldy     #$1002
