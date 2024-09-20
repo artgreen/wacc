@@ -10,28 +10,28 @@ main        start
             plb
             jsr     init
 
-;            puts    #'Hello, world.',cr=t
             pea     buffer
-            ldy     #$1001
             jsl     next
-            ldy     #$1002
-;            puts    #'Shutting down...',cr=t
+
             jsr     shutdown
             lda     #0
             rtl
 
-init        jsl     SystemEnvironmentInit
+init        anop
+            jsl     SystemEnvironmentInit
             jsl     SysIOStartup
+            lda     #buffer
+            sta     startptr
             rts
 
 shutdown    jsl     SysIOShutDown
             rts
-            end
+
             end     ; main
 
 input_area  data
-buffer      dc      c'int main(void) { return 0; }'
-            dc      i1'0'
-nextword    dc      i4'0'
+startptr    dc      i4'0'
+buffer      anop
+            dc      c'    int main(void) { return 0; }',i1'0'
             end     ; input_area
 
