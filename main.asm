@@ -40,13 +40,13 @@ init        anop
             sta     ~USER_ID        ; save this user id
             sta     userid
             jsl     ~MM_INIT        ; initialize the heap manager
-            ph2     0
-            lda     max_input
-            pha
+            ph2     0               ; low word of size
+            lda     max_input       ; high word of size (<=$ffff total)
+            pha                     ; push onto stack
             jsl     ~NEW            ; ask for it
-            bcs     failed
-            stx     bufferbank
-            sta     bufferptr
+            bcs     failed          ; ruh-roh
+            stx     bufferbank      ; remember where our
+            sta     bufferptr       ; memory is
 
             trace   off
             putcr
