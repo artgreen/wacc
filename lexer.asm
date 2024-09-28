@@ -2,41 +2,104 @@
             list    on
             gen     on
             65816   on
-            mcopy   m16.ORCA
+            mcopy   2:ORCAInclude:m16.ORCA
+            mcopy   2:ORCAInclude:m16.Tools
+            mcopy   m16.utils.asm
 
             list    off
             copy    tokens.inc.asm
             list    on
+            trace   off
 
 *
-* next
+* get next character from the buffer
 *
-next        start
+getchar     start
             using   lexer_data
-
-            csub     (2:iptr),0
-            ldy     #$0             ; start at byte 0
-loop        lda     (iptr+2,S),y    ; get a byte from buffer
-            beq     bye             ; if null, bail
-            pha                     ; save C
-            pha                     ; push C for print
-            jsl     SysCharOut      ; print
-            pla                     ; pull C
-            xba                     ; swap bytes in C
-            beq     bye             ; if null, bail
-            pha                     ; push C
-            jsl     SysCharOut      ; print
-            iny                     ; x += 2
-            iny
-            bne     loop            ; unless we've wrapped, loop
-bye         lda     #$0D            ; load ^M
-            pha                     ; push C
-            jsl     SysCharOut      ; print
-            ret
+            rts
             end     ; next
 
+*
+* Initialize the lexer
+* Input: pointer to input area on stack
+*
+lexer_init  start
+            using   lexer_data
+            csub    (2:inptr),0
+            lda     inptr               ; get input ptr
+            sta     inputptr            ; save it
+            dec     a                   ; save lastnewline
+            sta     lastnewline         ;
+            lda     #1                  ; linenum = 1
+            sta     linenum
+            stz     colnum              ; col = 0
+            ret
+            end     ; lexer_init
+*
+* Advance the input pointer to the next non-whitespace char
+*
+advance     start
+p_input     equ     0
+last_nl     equ     2
+
+            using   lexer_data
+            csub    ,4
+            lda     inputptr
+            sta     p_input
+; move past whitespace
+skipwhite   lda     (p_input)
+            and     #$7F
+            cmp     #32
+            beq     space
+            cmp     #9
+            beq     space
+; wasn't a space
+            bra     notwhite
+space       inc     p_input
+            bra     skipwhite
+notwhite    anop
+            lda     p_input             ; startptr = inputptr
+            sta     t_start_ptr
+            lda     lastnewline         ; last_nl = lastnewline
+            sta     last_nl
+            lda     (p_input)           ; get current char
+            and     #$7f
+            cmp     #13                 ; is it a newline?
+            bne     found
+
+            inc     linenum             ; yes, linenum++
+            lda     t_start_ptr         ; last_nl = startptr
+            sta     last_nl
+found       lda     t_start_ptr
+            sec
+            sbc     last_nl
+            dec     a
+            sta     colnum
+ brk
+            ret
+            end     ; advance
+
+
             list    off
+            trace   off
 lexer_data  data
+*
+* lexer state
+*
+; thy input be here
+inputptr    dc      i4'0'
+; current token info
+t_start_ptr dc      i4'0'
+t_end_ptr   dc      i4'0'
+t_type      dc      i2'0'
+; source position tracking
+linenum     dc      i4'1'
+colnum      dc      i4'0'
+lastnewline dc      i4'0'
+
+*
+* token table
+*
 tokentable  anop
             dw      '+'
             dc      i1'T_PLUS'

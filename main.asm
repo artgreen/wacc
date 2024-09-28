@@ -7,7 +7,7 @@
             mcopy   m16.utils.asm
 
 main        start
-            using   input_area
+            using   test_data
             using   common
             memory  long
             index   long
@@ -17,14 +17,17 @@ main        start
             jsr     init
             bcs     abort
 
-;            per     buffer
-;            jsl     next
-
+            pea     test_input
+            jsl     lexer_init
+            jsl     advance
+            brk
 exit        anop
             jsr     shutdown
             lda     #0              ; return 0
             rtl
-abort       lda     #1
+abort       anop
+            puts    #'Abort...',CR=T
+            lda     #1
             rtl
 
             trace on
@@ -39,6 +42,7 @@ init        anop
             ora     #$0100          ; set aux id field to 1
             sta     ~USER_ID        ; save this user id
             sta     userid
+; init the heap and get us some ram for input
             jsl     ~MM_INIT        ; initialize the heap manager
             ph2     0               ; low word of size
             lda     max_input       ; high word of size (<=$ffff total)
@@ -49,12 +53,13 @@ init        anop
             sta     bufferptr       ; memory is
 
             trace   off
-            putcr
-            puts    #'Input buffer: '
-            put2    bufferbank,#1,
-            puts    #'/'
-            put2    bufferptr,#1,CR=T
-            putcr
+;             putcr
+;             puts    #'Input buffer: '
+;             put2    bufferbank
+;             cout    #'/'
+;             brk
+;             put2    bufferptr,#1,CR=T
+;             putcr
 failed      anop
             rts
 
@@ -68,19 +73,19 @@ shutdown    anop
             jsl     $E10000
 ; shut down system IO
             jsl     SysIOShutDown
+; sleepy time
             rts
 
             end     ; main
 
 common      data
-max_input   dc      i2'1024'
-userid      dc      i2'0'
-bufferbank  dc      i2'0'
+max_input   dc      i2'1024'            ; max input size
+userid      dc      i2'0'               ; our user id
+bufferbank  dc      i2'0'               ; address of input area
 bufferptr   dc      a'0'
             end
 
-input_area  data
-buffer      anop
-            dc      c'  123456789  int main(void) { return 0; }',i1'0'
+test_data   data
+test_input  dc      c'      123456789  int main(void) { return 0; }',i1'0'
             end     ; input_area
 
