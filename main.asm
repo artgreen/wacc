@@ -19,7 +19,8 @@ main        start
 
             pea     test_input
             jsl     lexer_init
-            jsl     advance
+            jsl     next
+            jsl     prntoken
             brk
 exit        anop
             jsr     shutdown
@@ -86,6 +87,7 @@ bufferptr   dc      a'0'
             end
 
 test_data   data
-test_input  dc      c'      123456789  int main(void) { return 0; }',i1'0'
+test_input  dc      c'  123456789  int main(void) { return 0; }',i1'0'
+;test_input  dc      c'     ',i2'0'
             end     ; input_area
 

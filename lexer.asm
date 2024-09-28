@@ -12,11 +12,66 @@
             trace   off
 
 *
-* get next character from the buffer
+* get next token from the buffer
 *
-getchar     start
+next        start
+p_input     equ     0
+            csub    ,4
+
             using   lexer_data
+            jsl     prnstate
+            jsl     advance
+            jsl     prnstate
+
+            lda     inputptr            ; p_input = inputptr
+            sta     p_input
+            jsr     getch
+            cmp     #0                  ; end of input?
+            beq     EOI
+; is number?
+            cmp     #'0'
+            blt     isalpha
+            cmp     #':'
+            bge     isalpha
+            jsr     getnum
+isalpha     anop
+done        anop
+            lda     p_input
+            sta     inputptr
+            jsl     prnstate
+            puts    #'Done',CR=T
+            ret
+; token is a number
+getnum      anop
+            lda     p_input             ; t_end_ptr = inputptr
+            sta     t_end_ptr
+getnum0     inc     p_input             ; inputptr++
+            jsr     getch              ; is the next char a digit?
+            cmp     #'0'
+            bcc     getnum1             ; nope, we're done
+            cmp     #':'
+            bcs     getnum1             ; nope, we're done
+            bra     getnum              ; yes, eat more
+getnum1     anop
+            lda     #T_NUMBER           ; type = T_NUMBER
+            sta     t_type
             rts
+            trace   off
+; get next character and x is next next character
+getch       anop
+            inc     colnum              ; col ++
+            lda     (p_input)           ; get char
+            tay                         ; save in Y
+            xba                         ; swap bytes in C
+            and     #$7f                ; clear top 8 bits
+            tax                         ; save look ahead in X
+            tya                         ; restore C
+            and     #$7f                ; clear top 8 bites
+            rts
+EOI         anop
+            stz     t_type              ; type = 0
+            puts    #'End of input',CR=T
+            brl     done
             end     ; next
 
 *
@@ -44,7 +99,8 @@ last_nl     equ     2
 
             using   lexer_data
             csub    ,4
-            lda     inputptr
+
+            lda     inputptr            ; p_input = inputptr
             sta     p_input
 ; move past whitespace
 skipwhite   lda     (p_input)
@@ -53,32 +109,82 @@ skipwhite   lda     (p_input)
             beq     space
             cmp     #9
             beq     space
-; wasn't a space
-            bra     notwhite
-space       inc     p_input
-            bra     skipwhite
+            bra     notwhite            ; not a space
+space       inc     p_input             ; was a space
+            bra     skipwhite           ; ignore it
 notwhite    anop
             lda     p_input             ; startptr = inputptr
             sta     t_start_ptr
             lda     lastnewline         ; last_nl = lastnewline
             sta     last_nl
-            lda     (p_input)           ; get current char
+notwhite1   lda     (p_input)           ; get current char
             and     #$7f
             cmp     #13                 ; is it a newline?
             bne     found
-
             inc     linenum             ; yes, linenum++
             lda     t_start_ptr         ; last_nl = startptr
             sta     last_nl
-found       lda     t_start_ptr
+            inc     p_input             ; inputptr++
+            bra     notwhite1           ; and try again
+
+found       anop
+            lda     t_start_ptr         ; calculate column num
+            sta     t_end_ptr
             sec
-            sbc     last_nl
+            sbc     last_nl             ; col = startptr - lastnl - 1
             dec     a
             sta     colnum
- brk
+            lda     last_nl             ; lastnewline = last_nl
+            sta     lastnewline
+            lda     p_input             ; startptr = inputptr
+            sta     inputptr
             ret
             end     ; advance
 
+prntoken    start
+p_input     equ     0
+p_end       equ     2
+
+            using   lexer_data
+            csub    ,4
+
+            puts    #'Token = '
+            lda     t_start_ptr
+            sta     p_input
+            lda     t_end_ptr
+            inc     a
+            sta     p_end
+prn0        lda     (p_input)
+            and     #$7f
+            pha
+            jsl     SysCharOut
+            inc     p_input
+            lda     p_input
+            cmp     p_end
+            blt     prn0
+            putcr
+            ret
+            end
+
+prnstate    start
+            using   lexer_data
+            puts    #'lexer state: ip='
+            put2    inputptr,#4
+            puts    #' start='
+            put2    t_start_ptr,#4
+            puts    #' end='
+            put2    t_end_ptr,#4
+            puts    #' type='
+            put2    t_type,#2
+            puts    #' line='
+            put2    linenum,#4
+            puts    #' col='
+            put2    colnum,#3
+            puts    #' lastnl='
+            put2    lastnewline,#4
+            putcr
+            rtl
+            end     ; prnstate
 
             list    off
             trace   off
@@ -91,7 +197,7 @@ inputptr    dc      i4'0'
 ; current token info
 t_start_ptr dc      i4'0'
 t_end_ptr   dc      i4'0'
-t_type      dc      i2'0'
+t_type      dc      i4'0'
 ; source position tracking
 linenum     dc      i4'1'
 colnum      dc      i4'0'
