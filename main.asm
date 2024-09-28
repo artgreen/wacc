@@ -21,7 +21,13 @@ main        start
             jsl     lexer_init
             jsl     next
             jsl     prntoken
-            brk
+            jsl     next
+            jsl     prntoken
+            jsl     next
+            jsl     prntoken
+            jsl     next
+            jsl     prntoken
+;            brk
 exit        anop
             jsr     shutdown
             lda     #0              ; return 0

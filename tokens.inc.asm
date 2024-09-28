@@ -74,3 +74,4 @@ T_RCURLY    GEQU    $44
 T_HASH      GEQU    $45
 T_DEREF     GEQU    $46
 T_NUMBER    GEQU    $47
+T_IDENT     GEQU    $48

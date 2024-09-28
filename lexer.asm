@@ -11,11 +11,12 @@
             list    on
             trace   off
 
-*
-* get next token from the buffer
-*
+;
+; get next token from the buffer
+;
 next        start
 p_input     equ     0
+p_start     equ     2                   ; ptr to start of token
             csub    ,4
 
             using   lexer_data
@@ -27,16 +28,75 @@ p_input     equ     0
             sta     p_input
             jsr     getch
             cmp     #0                  ; end of input?
-            beq     EOI
+            bne     isdigit
+            brl     EOI
 ; is number?
-            cmp     #'0'
-            blt     isalpha
+isdigit     cmp     #'0'
+            blt     isunder
             cmp     #':'
-            bge     isalpha
+            bge     isunder
             jsr     getnum
+            brl     done
+isunder     anop
+            cmp     #'_'                ; is it an _
+            beq     isword              ; yes, has to be an identifier
 isalpha     anop
+            cmp     #'A'
+            blt     iswhite             ; is it less than A?
+            cmp     #'Z'+1              ; is it less than or equal to Z?
+            blt     isword             ; yes, tis a word
+            cmp     #'a'                ; is it less than a
+            blt     iswhite             ; nope, is it a punct?
+            cmp     #'z'+1
+            blt     isword
+iswhite     anop
+            cmp     #32
+            bne     iswhite1
+            brl     done
+iswhite1    cmp     #9
+            bne     iswhite2
+            brl     done
+iswhite2    cmp     #13
+            bne     iswhite3
+            brl     done
+iswhite3    cmp     #10
+            bne     ispunct
+            brl     done
+ispunct     anop
+            brk
+isword      anop
+            jsr     getalphanum
+            brl     done
+; collect alphanums for an ident or keyword
+getalphanum anop
+            ldy     p_input             ; t_end_ptr = inputptr
+            sty     t_end_ptr
+            inc     p_input             ; inputptr++
+; is it a digit
+            jsr     getch               ; is the next char a digit?
+            cmp     #'0'
+            blt     getword1            ; nope, is it an alpha?
+            cmp     #'9'
+            bgt     getalphanum         ; refactor this to use blt
+;            bra              ; yes, eat more
+; is it an alpha
+getword1    anop
+            cmp     #'A'                ; is it less than A?
+            blt     worddone            ; no, we're done
+            cmp     #'Z'+1              ; is it less than or equal to Z?
+            blt     getalphanum            ; yes
+            cmp     #'a'                ; is it less than a
+            blt     worddone            ; nope
+            cmp     #'z'+1
+            blt     getalphanum
+            brk
+worddone    anop
+; set type here
+            lda     #T_IDENT
+            sta     t_type
+            rts
 done        anop
-            lda     p_input
+            lda     p_input             ; inputptr = p_input
             sta     inputptr
             jsl     prnstate
             puts    #'Done',CR=T
@@ -45,8 +105,8 @@ done        anop
 getnum      anop
             lda     p_input             ; t_end_ptr = inputptr
             sta     t_end_ptr
-getnum0     inc     p_input             ; inputptr++
-            jsr     getch              ; is the next char a digit?
+            inc     p_input             ; inputptr++
+            jsr     getch               ; is the next char a digit?
             cmp     #'0'
             bcc     getnum1             ; nope, we're done
             cmp     #':'
@@ -56,7 +116,7 @@ getnum1     anop
             lda     #T_NUMBER           ; type = T_NUMBER
             sta     t_type
             rts
-            trace   off
+
 ; get next character and x is next next character
 getch       anop
             inc     colnum              ; col ++
@@ -77,6 +137,7 @@ EOI         anop
 *
 * Initialize the lexer
 * Input: pointer to input area on stack
+* Output: None
 *
 lexer_init  start
             using   lexer_data
@@ -91,7 +152,9 @@ lexer_init  start
             ret
             end     ; lexer_init
 *
-* Advance the input pointer to the next non-whitespace char
+* Advance the input pointer
+* Input: None
+* Output: Leaves the input pointer at the next non-whitespace char
 *
 advance     start
 p_input     equ     0
@@ -102,6 +165,7 @@ last_nl     equ     2
 
             lda     inputptr            ; p_input = inputptr
             sta     p_input
+            stz     t_type              ; type = 0
 ; move past whitespace
 skipwhite   lda     (p_input)
             and     #$7F
