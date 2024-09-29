@@ -1,4 +1,11 @@
 
+        MACRO
+&LAB    token   &t,&l
+        dc      i2'&l'
+        dc      i2'k_&t'
+        dc      i2't_&t'
+        mexit
+
         macro
 &lab    settrace &v
         pea     &v

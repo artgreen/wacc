@@ -196,6 +196,7 @@ EOI         anop
 *
 lexer_init  start
             using   lexer_data
+
             csub    (2:inptr),0
             lda     inptr               ; get input ptr
             sta     inputptr            ; save it
@@ -204,6 +205,12 @@ lexer_init  start
             lda     #1                  ; linenum = 1
             sta     linenum
             stz     colnum              ; col = 0
+
+            pea     2
+            lda     inputptr
+            pha
+            pea     48
+            jsl     hexdump
             ret
             end     ; lexer_init
 *
@@ -260,6 +267,7 @@ found       anop
             sta     inputptr
             ret
             end     ; advance
+            trace   off
 
 prntoken    start
 p_input     equ     0
@@ -323,155 +331,76 @@ linenum     dc      i4'1'
 colnum      dc      i4'0'
 lastnewline dc      i4'0'
 
-*
-* token table
-*
-tokentable  anop
-            dw      '+'
-            dc      i1'T_PLUS'
-            dw      '-'
-            dc      i1'T_DASH'
-            dw      '*'
-            dc      i1'T_STAR'
-            dw      '('
-            dc      i1'T_LPAREN'
-            dw      ')'
-            dc      i1'T_RPAREN'
-            dw      '/'
-            dc      i1'T_DIV'
-            dw      '%'
-            dc      i1'T_MOD'
-            dw      '.'
-            dc      i1'T_DOT'
-            dw      '='
-            dc      i1'T_EQUAL'
-            dw      '!'
-            dc      i1'T_BANG'
-            dw      '&'
-            dc      i1'T_AND'
-            dw      '|'
-            dc      i1'T_BAR'
-            dw      '^'
-            dc      i1'T_CARET'
-            dw      '~'
-            dc      i1'T_TILDE'
-            dw      ','
-            dc      i1'T_COMMA'
-            dw      ':'
-            dc      i1'T_COLON'
-            dw      '?'
-            dc      i1'T_TERNARY'
-            dw      '['
-            dc      i1'T_LBRACKET'
-            dw      ']'
-            dc      i1'T_RBRACKET'
-            dw      '>'
-            dc      i1'T_GREATER'
-            dw      '<'
-            dc      i1'T_LESSTHAN'
-            dw      '{'
-            dc      i1'T_LCURLY'
-            dw      '}'
-            dc      i1'T_RCURLY'
-            dw      '#'
-            dc      i1'T_HASH'
-            dw      '++'
-            dc      i1'T_PLUSPLUS'
-            dw      '--'
-            dc      i1'T_DASHDASH'
-            dw      '+='
-            dc      i1'T_PLUSEQUAL'
-            dw      '-='
-            dc      i1'T_MINUSEQ'
-            dw      '*='
-            dc      i1'T_STAREQUAL'
-            dw      '/='
-            dc      i1'T_DIVEQUAL'
-            dw      '%='
-            dc      i1'T_MODEQUAL'
-            dw      '=='
-            dc      i1'T_EQEQ'
-            dw      '>='
-            dc      i1'T_GTEQUAL'
-            dw      '<='
-            dc      i1'T_LTEQUAL'
-            dw      '&&'
-            dc      i1'T_ANDAND'
-            dw      '||'
-            dc      i1'T_BARBAR'
-            dw      '<<'
-            dc      i1'T_LSHIFT'
-            dw      '>>'
-            dc      i1'T_RSHIFT'
-            dw      '!='
-            dc      i1'T_NOTEQUAL'
-            dw      '->'
-            dc      i1'T_DEREF'
-            dw      'do'
-            dc      I1'T_DO'
-            dw      'if'
-            dc      I1'T_IF'
-            dw      'int'
-            dc      I1'T_INT'
-            dw      'for'
-            dc      I1'T_FOR'
-            dw      'goto'
-            dc      I1'T_GOTO'
-            dw      'long'
-            dc      I1'T_LONG'
-            dw      'auto'
-            dc      I1'T_AUTO'
-            dw      'case'
-            dc      I1'T_CASE'
-            dw      'char'
-            dc      I1'T_CHAR'
-            dw      'else'
-            dc      I1'T_ELSE'
-            dw      'enum'
-            dc      I1'T_ENUM'
-            dw      'void'
-            dc      I1'T_VOID'
-            dw      'union'
-            dc      I1'T_UNION'
-            dw      'while'
-            dc      I1'T_WHILE'
-            dw      'break'
-            dc      I1'T_BREAK'
-            dw      'const'
-            dc      I1'T_CONST'
-            dw      'float'
-            dc      I1'T_FLOAT'
-            dw      'short'
-            dc      I1'T_SHORT'
-            dw      'double'
-            dc      I1'T_DOUBLE'
-            dw      'extern'
-            dc      I1'T_EXTERN'
-            dw      'return'
-            dc      I1'T_RETURN'
-            dw      'signed'
-            dc      I1'T_SIGNED'
-            dw      'sizeof'
-            dc      I1'T_SIZEOF'
-            dw      'static'
-            dc      I1'T_STATIC'
-            dw      'struct'
-            dc      I1'T_STRUCT'
-            dw      'switch'
-            dc      I1'T_SWITCH'
-            dw      'default'
-            dc      I1'T_DEFAULT'
-            dw      'typedef'
-            dc      I1'T_TYPEDEF'
-            dw      'register'
-            dc      I1'T_REGISTER'
-            dw      'unsigned'
-            dc      I1'T_UNSIGNED'
-            dw      'continue'
-            dc      I1'T_CONTINUE'
-            dw      'volatile'
-            dc      I1'T_VOLATILE'
-            dc      i2'00'
+keyindex    anop
+            token   'volatile',8
+            token   'continue',8
+            token   'unsigned',8
+            token   'register',8
+            token   'typedef',7
+            token   'default',7
+            token   'switch',6
+            token   'struct',6
+            token   'static',6
+            token   'sizeof',6
+            token   'signed',6
+            token   'return',6
+            token   'extern',6
+            token   'double',6
+            token   'short',5
+            token   'float',5
+            token   'const',5
+            token   'break',5
+            token   'while',5
+            token   'union',5
+            token   'void',4
+            token   'enum',4
+            token   'else',4
+            token   'char',4
+            token   'case',4
+            token   'auto',4
+            token   'long',4
+            token   'goto',4
+            token   'for',3
+            token   'int',3
+            token   'if',2
+            token   'do',2
+            dc      i2'0'
+
+            list    off
+keywords    anop
+k_do        dc c'do'
+k_if        dc c'if'
+k_int       dc c'int'
+k_for       dc c'for'
+k_goto      dc c'goto'
+k_long      dc c'long'
+k_auto      dc c'auto'
+k_case      dc c'case'
+k_char      dc c'char'
+k_else      dc c'else'
+k_enum      dc c'enum'
+k_void      dc c'void'
+k_union     dc c'union'
+k_while     dc c'while'
+k_break     dc c'break'
+k_const     dc c'const'
+k_float     dc c'float'
+k_short     dc c'short'
+k_double    dc c'double'
+k_extern    dc c'extern'
+k_return    dc c'return'
+k_signed    dc c'signed'
+k_sizeof    dc c'sizeof'
+k_static    dc c'static'
+k_struct    dc c'struct'
+k_switch    dc c'switch'
+k_default   dc c'default'
+k_typedef   dc c'typedef'
+k_volatile  dc c'volatile'
+k_continue  dc c'continue'
+k_unsigned  dc c'unsigned'
+k_register  dc c'register'
+
             end     ; lexer_data
 
 
