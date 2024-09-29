@@ -37,9 +37,12 @@ isdigit     cmp     #'0'
             bge     isunder
             jsr     getnum
             brl     done
+; does the next lexem start with an underscore?
+; if so, this has to be an identifier
 isunder     anop
             cmp     #'_'                ; is it an _
             beq     isword              ; yes, has to be an identifier
+; is this a alphabetic word
 isalpha     anop
             cmp     #'A'
             blt     ispunct             ; is it less than A?
@@ -48,10 +51,11 @@ isalpha     anop
             cmp     #'a'                ; is it less than a
             blt     ispunct             ; nope, is it a punct?
             cmp     #'z'                ; less than z?
-            bgt     ispunct
+            bgt     ispunct             ; fall through if less than z
 isword      anop
             jsr     getalphanum
             brl     done
+; is this punctuation
 ispunct     anop
             cmp     #'+'
             bne     ispunct1
@@ -87,7 +91,11 @@ punctdone   anop
             inc     p_input             ; advance input ptr
             sta     t_type              ; save the token type
             brl     done
+
+; getalphanum()
+;
 ; collect alphanums for an ident or keyword
+;
 getalphanum anop
             ldy     p_input             ; t_end_ptr = inputptr
             sty     t_end_ptr
@@ -109,24 +117,31 @@ getword1    anop
             blt     worddone            ; nope
             cmp     #'z'+1
             blt     getalphanum
+; we shouldn't get here
             brk
 worddone    anop
 ; set type here
             lda     #T_IDENT
             sta     t_type
             rts
+
+;
+; finish up this round of scanning
+; return result of scanning in X
+;
 done        anop
             lda     p_input             ; inputptr = p_input
             sta     inputptr
             jsl     prnstate
             puts    #'Done',CR=T
-            lda     inputptr
+            lda     inputptr            ; if inputptr == startptr, we're jammed
             cmp     t_start_ptr
             beq     jammed
-            ldx     #0
+            ldx     #0                  ; otherwise return OK
             bra     bye
-jammed      ldx     #$ffff
-
+; scanner is jammed
+jammed      anop
+            ldx     #$ffff
 bye         anop
             ret
 
