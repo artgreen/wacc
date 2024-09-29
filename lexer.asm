@@ -42,30 +42,16 @@ isunder     anop
             beq     isword              ; yes, has to be an identifier
 isalpha     anop
             cmp     #'A'
-            blt     iswhite             ; is it less than A?
+            blt     ispunct             ; is it less than A?
             cmp     #'Z'+1              ; is it less than or equal to Z?
-            blt     isword             ; yes, tis a word
+            blt     isword              ; yes, tis a word
             cmp     #'a'                ; is it less than a
-            blt     iswhite             ; nope, is it a punct?
-            cmp     #'z'+1
-;            blt     isword
+            blt     ispunct             ; nope, is it a punct?
+            cmp     #'z'                ; less than z?
+            bgt     ispunct
 isword      anop
             jsr     getalphanum
             brl     done
-
-iswhite     anop
-;             cmp     #32
-;             bne     iswhite1
-;             brl     done
-; iswhite1    cmp     #9
-;             bne     iswhite2
-;             brl     done
-; iswhite2    cmp     #13
-;             bne     iswhite3
-;             brl     done
-; iswhite3    cmp     #10
-;             bne     ispunct
-;             brl     done
 ispunct     anop
             cmp     #'+'
             bne     ispunct1
