@@ -1,4 +1,25 @@
 
+        macro
+&lab    settrace &v
+        pea     &v
+        ldx     #$11ff
+        jsl     $e10000
+        mexit
+
+        macro
+&lab    toff
+        pea     0
+        ldx     #$11ff
+        jsl     $e10000
+        mexit
+
+        macro
+&lab    ton
+        pea     1
+        ldx     #$11ff
+        jsl     $e10000
+        mexit
+
         MACRO
 &LAB    INDEX   &L
         LCLC    &R
