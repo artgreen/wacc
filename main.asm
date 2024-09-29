@@ -59,13 +59,7 @@ init        anop
             sta     bufferptr       ; memory is
 
             trace   off
-;             putcr
-;             puts    #'Input buffer: '
-;             put2    bufferbank
-;             cout    #'/'
-;             brk
-;             put2    bufferptr,#1,CR=T
-;             putcr
+
 failed      anop
             rts
 
