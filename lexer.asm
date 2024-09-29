@@ -129,7 +129,12 @@ jammed      ldx     #$ffff
 
 bye         anop
             ret
-; token is a number
+
+; getnum()
+;
+; collect digits to form an integer
+;
+;
 getnum      anop
             lda     p_input             ; t_end_ptr = inputptr
             sta     t_end_ptr
@@ -145,7 +150,14 @@ getnum1     anop
             sta     t_type
             rts
 
-; get next character and x is next next character
+; getch()
+;
+; get the next word from the input stream. Increment column number.
+;   inputs: none
+;   return:         A = byte of input
+;                   X = byte of next input char (look ahead)
+;   notes:          Y is not preserved
+;
 getch       anop
             inc     colnum              ; col ++
             lda     (p_input)           ; get char
