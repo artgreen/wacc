@@ -215,6 +215,8 @@ skipwhite   lda     (p_input)
             beq     space
             cmp     #9
             beq     space
+            cmp     #10
+            beq     space
             bra     notwhite            ; not a space
 space       inc     p_input             ; was a space
             bra     skipwhite           ; ignore it
@@ -223,7 +225,7 @@ notwhite    anop
             sta     t_start_ptr
             lda     lastnewline         ; last_nl = lastnewline
             sta     last_nl
-notwhite1   lda     (p_input)           ; get current char
+            lda     (p_input)           ; get current char
             and     #$7f
             cmp     #13                 ; is it a newline?
             bne     found
@@ -231,8 +233,7 @@ notwhite1   lda     (p_input)           ; get current char
             lda     t_start_ptr         ; last_nl = startptr
             sta     last_nl
             inc     p_input             ; inputptr++
-            bra     notwhite1           ; and try again
-
+            bra     notwhite           ; and try again
 found       anop
             lda     t_start_ptr         ; calculate column num
             sta     t_end_ptr
