@@ -15,20 +15,19 @@ main        start
             phk
             plb
             jsr     init
-            bcs     abort
+;            bcs     abort
 
             pea     test_input
             jsl     lexer_init
-            jsl     next
+
+again       jsl     next
+            cpx     #$ffff
+            beq     exit
             jsl     prntoken
-            jsl     next
-            jsl     prntoken
-            jsl     next
-            jsl     prntoken
-            jsl     next
-            jsl     prntoken
-;            brk
+            bra     again
+            brk
 exit        anop
+            puts    #'All done',CR=T
             jsr     shutdown
             lda     #0              ; return 0
             rtl

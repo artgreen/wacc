@@ -48,24 +48,58 @@ isalpha     anop
             cmp     #'a'                ; is it less than a
             blt     iswhite             ; nope, is it a punct?
             cmp     #'z'+1
-            blt     isword
-iswhite     anop
-            cmp     #32
-            bne     iswhite1
-            brl     done
-iswhite1    cmp     #9
-            bne     iswhite2
-            brl     done
-iswhite2    cmp     #13
-            bne     iswhite3
-            brl     done
-iswhite3    cmp     #10
-            bne     ispunct
-            brl     done
-ispunct     anop
-            brk
+;            blt     isword
 isword      anop
             jsr     getalphanum
+            brl     done
+
+iswhite     anop
+;             cmp     #32
+;             bne     iswhite1
+;             brl     done
+; iswhite1    cmp     #9
+;             bne     iswhite2
+;             brl     done
+; iswhite2    cmp     #13
+;             bne     iswhite3
+;             brl     done
+; iswhite3    cmp     #10
+;             bne     ispunct
+;             brl     done
+ispunct     anop
+            cmp     #'+'
+            bne     ispunct1
+            cpx     #'+'
+            bne     ispunct0
+            lda     #T_PLUSPLUS
+            brl     punctdone
+ispunct0    lda     #T_PLUS
+            brl     punctdone
+ispunct1    anop
+            cmp     #'('
+            bne     ispunct2
+            lda     #T_LPAREN
+            brl     punctdone
+ispunct2    cmp     #')'
+            bne     ispunct3
+            lda     #T_RPAREN
+            brl     punctdone
+ispunct3    cmp     #'{'
+            bne     ispunct4
+            lda     #T_LCURLY
+            brl     punctdone
+ispunct4    cmp     #'}'
+            bne     ispunct5
+            lda     #T_RCURLY
+            brl     punctdone
+ispunct5    cmp     #';'
+            bne     ispunct6
+            lda     #T_SEMI
+            brl     punctdone
+ispunct6    brk
+punctdone   anop
+            inc     p_input             ; advance input ptr
+            sta     t_type              ; save the token type
             brl     done
 ; collect alphanums for an ident or keyword
 getalphanum anop
@@ -100,6 +134,14 @@ done        anop
             sta     inputptr
             jsl     prnstate
             puts    #'Done',CR=T
+            lda     inputptr
+            cmp     t_start_ptr
+            beq     jammed
+            ldx     #0
+            bra     bye
+jammed      ldx     #$ffff
+
+bye         anop
             ret
 ; token is a number
 getnum      anop
@@ -128,8 +170,8 @@ getch       anop
             tya                         ; restore C
             and     #$7f                ; clear top 8 bites
             rts
+; we've consumed all the input
 EOI         anop
-            stz     t_type              ; type = 0
             puts    #'End of input',CR=T
             brl     done
             end     ; next
