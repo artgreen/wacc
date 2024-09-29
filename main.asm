@@ -15,7 +15,7 @@ main        start
             phk
             plb
             jsr     init
-;            bcs     abort
+            bcs     abort
 
             pea     test_input
             jsl     lexer_init
