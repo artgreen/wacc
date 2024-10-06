@@ -8,7 +8,7 @@
 
             list    off
             copy    tokens.inc.asm
-            list    on
+            list    off
             trace   off
 
 ;
@@ -23,7 +23,7 @@ p_start     equ     2                   ; ptr to start of token
 ;             jsl     prnstate
             jsl     advance
 ;             jsl     prnstate
-
+;  ton
             lda     inputptr            ; p_input = inputptr
             sta     p_input
             jsr     getch
@@ -45,53 +45,56 @@ isunder     anop
 ; is this a alphabetic word
 isalpha     anop
             cmp     #'A'
-            blt     ispunct             ; is it less than A?
+            blt     isop             ; is it less than A?
             cmp     #'Z'+1              ; is it less than or equal to Z?
             blt     isword              ; yes, tis a word
             cmp     #'a'                ; is it less than a
-            blt     ispunct             ; nope, is it a punct?
+            blt     isop             ; nope, is it a punct?
             cmp     #'z'                ; less than z?
-            bgt     ispunct             ; fall through if less than z
+            bgt     isop             ; fall through if less than z
 isword      anop
             jsr     getalphanum
             brl     done
 ; is this punctuation
-ispunct     anop
-            cmp     #'+'
-            bne     ispunct1
-            cpx     #'+'
-            bne     ispunct0
-            lda     #T_PLUSPLUS
-            brl     punctdone
-ispunct0    lda     #T_PLUS
-            brl     punctdone
-ispunct1    anop
-            cmp     #'('
-            bne     ispunct2
-            lda     #T_LPAREN
-            brl     punctdone
-ispunct2    cmp     #')'
-            bne     ispunct3
-            lda     #T_RPAREN
-            brl     punctdone
-ispunct3    cmp     #'{'
-            bne     ispunct4
-            lda     #T_LCURLY
-            brl     punctdone
-ispunct4    cmp     #'}'
-            bne     ispunct5
-            lda     #T_RCURLY
-            brl     punctdone
-ispunct5    cmp     #';'
-            bne     ispunct6
-            lda     #T_SEMI
-            brl     punctdone
-ispunct6    brk
+isop        anop
+            cmp1 ';',#T_SEMI
+            cmp1 '(',#T_LPAREN
+            cmp1 ')',#T_RPAREN
+            cmp1 '{',#T_LCURLY
+            cmp1 '}',#T_RCURLY
+            cmp3 '+','+','=',#T_PLUS,#T_PLUSPLUS,#T_PLUSEQUAL
+            cmp3 '-','-','=',#T_DASH,#T_DASHDASH,#T_DASHEQUAL
+            cmp3 '&','&','=',#T_AND,#T_ANDAND,#T_ANDEQUAL
+            cmp3 '|','|','=',#T_BAR,#T_BARBAR,#T_BAREQUAL
+            cmp3 '<','<','=',#T_LESSTHAN,#T_LSHIFT,#T_LTEQUAL
+            cmp3 '>','>','=',#T_GREATER,#T_RSHIFT,#T_GTEQUAL
+            cmp2 '%','=',#T_MOD,#T_MODEQUAL
+            cmp2 '*','=',#T_STAR,#T_STAREQUAL
+            cmp2 '/','=',#T_DIV,#T_DIVEQUAL
+            cmp2 '!','=',#T_BANG,#T_NOTEQUAL
+            cmp2 '=','=',#T_EQUAL,#T_EQEQ
+            cmp2 '^','=',#T_CARET,#T_CARETEQ
+            cmp1 '.',#T_DOT
+            cmp1 '~',#T_TILDE
+            cmp1 ',',#T_COMMA
+            cmp1 ':',#T_COLON
+            cmp1 '?',#T_TERNARY
+            cmp1 '[',#T_LBRACKET
+            cmp1 ']',#T_RBRACKET
+            cmp1 '#',#T_HASH
+            bra     jammed
+; fix pointers because we sucked up an extra char
+; note: column number gets repaired in advance()
+fixinput    anop
+            inc     p_input             ; advance input ptr
+            inc     t_end_ptr           ; adjust the end of the token
+; advance pointer, store type and exit
 punctdone   anop
             inc     p_input             ; advance input ptr
             sta     t_type              ; save the token type
             brl     done
 
+;
 ; getalphanum()
 ;
 ; collect alphanums for an ident or keyword
@@ -210,6 +213,7 @@ skipwhite   lda     (p_input)
             beq     space
             bra     notwhite            ; not a space
 space       inc     p_input             ; was a space
+
             bra     skipwhite           ; ignore it
 notwhite    anop
             lda     p_input             ; startptr = inputptr
@@ -416,6 +420,9 @@ p_end       equ     2
 
             puts    #'Token: '
             put2    t_type,#2
+            put2    linenum,#2
+            putc    #','
+            put2    colnum,#2
             puts    #' Value: '
             lda     t_start_ptr
             sta     p_input
