@@ -29,7 +29,7 @@ p_start     equ     3                   ; ptr to start of token
 ;  ton
             lda     inputptr            ; p_input = inputptr
             sta     p_input
-            jsr     getch
+            jsr     getch               ; get next char of input
             cmp     #0                  ; end of input?
             bne     isdigit
             brl     EOI
@@ -138,9 +138,11 @@ done        anop
 ;  ton
             lda     p_input             ; inputptr = p_input
             sta     inputptr
-            lda     status
-            cmp     #E_EOI
-            beq     iseoi
+            lda     status              ; get lexer status
+            cmp     #E_EOI              ; are we at the end of input?
+            beq     iseoi               ; yup
+            cmp     #0                  ; status is ok?
+            bne     iseoi               ; nope, preserve status code
             lda     inputptr            ; if inputptr == startptr, we're jammed
             cmp     t_start_ptr
             beq     jammed
@@ -149,7 +151,7 @@ iseoi       anop
             bra     bye
 ; scanner is jammed
 jammed      anop
-            ldx     #$ffff              ; signal that the scanner is jammed
+            ldx     #E_JAMMED           ; signal that the scanner is jammed
             stx     status
 bye         anop
             ret
