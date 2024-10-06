@@ -23,6 +23,7 @@ p_start     equ     2                   ; ptr to start of token
 ;             jsl     prnstate
             jsl     advance
 ;             jsl     prnstate
+;  ton
             lda     inputptr            ; p_input = inputptr
             sta     p_input
             jsr     getch
@@ -141,7 +142,7 @@ done        anop
 jammed      anop
             ldx     #$ffff              ; signal that the scanner is jammed
 bye         anop
-            ret     ; next
+            ret
 
 ; getnum()
 ;
