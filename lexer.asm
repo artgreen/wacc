@@ -131,8 +131,6 @@ worddone    anop
 done        anop
             lda     p_input             ; inputptr = p_input
             sta     inputptr
-;             jsl     prnstate
-;             puts    #'Done',CR=T
             lda     inputptr            ; if inputptr == startptr, we're jammed
             cmp     t_start_ptr
             beq     jammed
@@ -187,35 +185,11 @@ EOI         anop
             puts    #'End of input',CR=T
             brl     done
             end     ; next
-
-*
-* Initialize the lexer
-* Input: pointer to input area on stack
-* Output: None
-*
-lexer_init  start
-            using   lexer_data
-
-            csub    (2:inptr),0
-            lda     inptr               ; get input ptr
-            sta     inputptr            ; save it
-            dec     a                   ; save lastnewline
-            sta     lastnewline         ;
-            lda     #1                  ; linenum = 1
-            sta     linenum
-            stz     colnum              ; col = 0
-            pea     2
-            lda     #keyindex
-            pha
-            pea     48
-            jsl     hexdump
-            ret
-            end     ; lexer_init
-*
-* Advance the input pointer
-* Input: None
-* Output: Leaves the input pointer at the next non-whitespace char
-*
+;
+; Advance the input pointer
+; Input: None
+; Output: Leaves the input pointer at the next non-whitespace char
+;
 advance     start
 p_input     equ     0
 last_nl     equ     2
@@ -340,11 +314,36 @@ bye         anop
             ret
             end     ; iskeyword
 
-*
-* prnkeyindex()
-*
-* prints out the keyword table
-*
+
+;
+; Initialize the lexer
+; Input: pointer to input area on stack
+; Output: None
+;
+lexer_init  start
+            using   lexer_data
+
+            csub    (2:inptr),0
+            lda     inptr               ; get input ptr
+            sta     inputptr            ; save it
+            dec     a                   ; save lastnewline
+            sta     lastnewline         ;
+            lda     #1                  ; linenum = 1
+            sta     linenum
+            stz     colnum              ; col = 0
+            pea     2
+            lda     #keyindex
+            pha
+            pea     48
+            jsl     hexdump
+            ret
+            end     ; lexer_init
+
+;
+; prnkeyindex()
+;
+; prints out the keyword table
+;
 prnkeyindex start
 p_index     equ     1
 p_keyword   equ     3
@@ -402,15 +401,13 @@ done_k      anop
             brl     next_i
 endindex    anop
             ret
-            end
+            end     ;prnkeyindex
 
-*
-* prntoken()
-*
-* print the string pointed to by t_start_ptr
-*
-            trace off
-            list off
+;
+; prntoken()
+;
+; print the string pointed to by t_start_ptr
+;
 prntoken    start
 p_input     equ     0
 p_end       equ     2
@@ -436,13 +433,13 @@ prn0        lda     (p_input)
             blt     prn0
             putcr
             ret
-            end
+            end     ; prntoken
 
-*
-* prnstate()
-*
-* Prints the lexer's current state
-*
+;
+; prnstate()
+;
+; Prints the lexer's current state
+;
 prnstate    start
             using   lexer_data
             puts    #'lexer state: ip='
@@ -466,9 +463,9 @@ prnstate    start
             list    off
             trace   off
 lexer_data  data
-*
-* lexer state
-*
+;
+; lexer state
+;
 ; thy input be here
 inputptr    dc      i4'0'
 ; current token info
