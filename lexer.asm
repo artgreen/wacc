@@ -105,8 +105,7 @@ getalphanum anop
             cmp     #'0'
             blt     getword1            ; nope, is it an alpha?
             cmp     #'9'
-            bgt     getalphanum         ; refactor this to use blt
-;            bra              ; yes, eat more
+            ble     getalphanum         ; yep, eat more
 ; is it an alpha
 getword1    anop
             cmp     #'A'                ; is it less than A?
@@ -138,7 +137,7 @@ done        anop
             bra     bye
 ; scanner is jammed
 jammed      anop
-            ldx     #$ffff
+            ldx     #$ffff              ; signal that the scanner is jammed
 bye         anop
             ret
 
