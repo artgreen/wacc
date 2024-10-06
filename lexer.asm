@@ -125,6 +125,9 @@ getword1    anop
             cmp     #'z'+1
             blt     getalphanum
 ; we shouldn't get here
+            ldx     #E_FATAL
+            stx     status
+            bra     iseoi
             brk
 worddone    anop
 ; look up if this is a keyword or not
@@ -135,7 +138,6 @@ worddone    anop
 ; return result of scanning in X
 ;
 done        anop
-;  ton
             lda     p_input             ; inputptr = p_input
             sta     inputptr
             lda     status              ; get lexer status
