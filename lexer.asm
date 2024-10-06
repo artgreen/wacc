@@ -88,7 +88,7 @@ isop        anop
 ; set status to unknown char
             ldx     #E_UNKNOWN
             stx     status
-            bra     jammed
+            bra     iseoi
 ; fix pointers because we sucked up an extra char
 ; note: column number gets repaired in advance()
 fixinput    anop
