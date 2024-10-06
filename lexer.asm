@@ -12,8 +12,6 @@
             list    off
             trace   off
 
-
-
 ;
 ; get next token from the buffer
 ;
