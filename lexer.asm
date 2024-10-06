@@ -20,9 +20,9 @@ p_start     equ     2                   ; ptr to start of token
             csub    ,4
 
             using   lexer_data
-            jsl     prnstate
+;             jsl     prnstate
             jsl     advance
-            jsl     prnstate
+;             jsl     prnstate
 
             lda     inputptr            ; p_input = inputptr
             sta     p_input
@@ -120,14 +120,8 @@ getword1    anop
 ; we shouldn't get here
             brk
 worddone    anop
-; set type here
-;             ton
-            lda     #T_IDENT
-            sta     t_type
-;             pea     t_end_ptr
-;             pea     t_start_ptr
-;             jsl     iskeyword
-;             brk
+; look up if this is a keyword or not
+            jsl     iskeyword
             rts
 
 ;
@@ -137,8 +131,8 @@ worddone    anop
 done        anop
             lda     p_input             ; inputptr = p_input
             sta     inputptr
-            jsl     prnstate
-            puts    #'Done',CR=T
+;             jsl     prnstate
+;             puts    #'Done',CR=T
             lda     inputptr            ; if inputptr == startptr, we're jammed
             cmp     t_start_ptr
             beq     jammed
@@ -273,78 +267,78 @@ found       anop
             end     ; advance
 
 ;
+; iskeyword()
+;
+; returns code or T_IDENT
+;
 iskeyword   start
-result      equ     0
-p_keyword   equ     2
-p_index     equ     4
-t_size      equ     6
-
+p_index     equ     1                   ; pointer to the base of the index
+p_keyword   equ     3                   ; pointer to the current keyword
+index_y     equ     5                   ; current index into the index
+token_len   equ     7                   ; current keyword length
+token_code  equ     11                  ; token code for the current keyword
+t_size      equ     13                  ; size of the input string
+p_input     equ     15
             using   lexer_data
-            csub    (2:p_start,2:p_end),10
 
-;             ton
-            lda     p_end
+            csub    ,20
+
+; calculate the size of the string in question
+            lda     t_end_ptr
             sec
-            sbc     p_start
-            dec     a
+            sbc     t_start_ptr
+            inc     a
             sta     t_size
-            lda     #keyindex
-            sta     p_index
-
+; set up the index loop
+            lda     #keyindex           ; save a pointer to the index
+            sta     p_index             ; in p_index
+            ldy     #0                  ; index_y = 0
+            sty     index_y
+; start down the index
+next_i      anop
+            ldy     index_y             ; y = index_y
+            lda     (p_index),y         ; get next token len
+            bne     next_i1
+            brl     end_i               ; we're done if it is zero
+next_i1     anop
+            sta     token_len           ; remember the token length
+            ldy     index_y             ; y = index_y
+            iny                         ; point y at the keyword ptr
+            iny
+            lda     (p_index),y         ; get the keyword addr
+            sta     p_keyword           ; save it in p_keyword
+            iny                         ; point y at the token code
+            iny
+            lda     (p_index),y         ; get the token code
+            sta     t_type              ; and store in token_code
+            iny                         ; move Y to point to the start
+            iny                         ; of the next keyword index
+            sty     index_y             ; and remember it for later
+; compare lengths
+            lda     token_len           ; get keyword length
+            cmp     t_size              ; compare to the input's length
+            bne     next_i
             ldy     #0
-c1          lda     (p_index),y
-            beq     nomatch
-            sta     result
-            sty     p_keyword
-            pha
-            jsl     SysCharOut
-            ldy     p_keyword
-            brk
-            bra     c1
+            lda     t_start_ptr
+            sta     p_input
+next_k      lda     (p_keyword),y
+            and     #$7f
+ memory short
+            cmp     (p_input),y
+ memory long
+            bne     next_i
+            iny
+            cpy     token_len
+            beq     bye
+            bne     next_k
+done_k      anop
 
-
-            ldy     #0
-cmpsize     lda     (p_index),y
-            beq     nomatch
-            sec
-            sbc     t_size
-            beq     docmp
-            tya
-            clc
-            adc     #6
-            tay
-            bra     cmpsize
-docmp       anop
-            iny                         ; move y to next index entry
-            iny
-            lda     (p_index),y         ; p_keyword = index ptr
-            sta     p_keyword
-            iny
-            iny
-            lda     (p_index),y         ; result = token code
-            sta     result
-            iny
-            iny
-            tyx
-            lda     #0
-            ldy     t_size
-cmpnext     anop
-            memory  short
-            lda     (p_keyword),y
-            lda     (p_start),y
-            memory  long
-            brk
-            bne     nomatch
-            brk
-
-nomatch     anop
-            lda     #0
-            sta     result
-            brk
-            ret     2:result
+end_i       anop
+            lda     #T_IDENT
+            sta     t_type
+bye         anop
+            ret
             end     ; iskeyword
-
-            trace   off
 
 *
 * prnkeyindex()
@@ -424,7 +418,9 @@ p_end       equ     2
             using   lexer_data
             csub    ,4
 
-            puts    #'Token = '
+            puts    #'Token: '
+            put2    t_type,#2
+            puts    #' Value: '
             lda     t_start_ptr
             sta     p_input
             lda     t_end_ptr
