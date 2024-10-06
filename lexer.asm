@@ -8,18 +8,23 @@
 
             list    off
             copy    tokens.inc.asm
+            copy    common.inc.asm
             list    off
             trace   off
+
+
 
 ;
 ; get next token from the buffer
 ;
 next        start
-p_input     equ     0
-p_start     equ     2                   ; ptr to start of token
-            csub    ,4
+p_input     equ     1                   ; ptr to current place in input
+p_start     equ     3                   ; ptr to start of token
 
             using   lexer_data
+
+            csub    ,6
+            stz     status              ; set result to a-ok
 ;             jsl     prnstate
             jsl     advance
 ;             jsl     prnstate
@@ -82,6 +87,9 @@ isop        anop
             cmp1 '[',#T_LBRACKET
             cmp1 ']',#T_RBRACKET
             cmp1 '#',#T_HASH
+; set status to unknown char
+            ldx     #E_UNKNOWN
+            stx     status
             bra     jammed
 ; fix pointers because we sucked up an extra char
 ; note: column number gets repaired in advance()
@@ -93,7 +101,6 @@ punctdone   anop
             inc     p_input             ; advance input ptr
             sta     t_type              ; save the token type
             brl     done
-
 ;
 ; getalphanum()
 ;
@@ -125,25 +132,29 @@ worddone    anop
 ; look up if this is a keyword or not
             jsl     iskeyword
             rts
-
 ;
 ; finish up this round of scanning
 ; return result of scanning in X
 ;
 done        anop
+;  ton
             lda     p_input             ; inputptr = p_input
             sta     inputptr
+            lda     status
+            cmp     #E_EOI
+            beq     iseoi
             lda     inputptr            ; if inputptr == startptr, we're jammed
             cmp     t_start_ptr
             beq     jammed
-            ldx     #0                  ; otherwise return OK
+iseoi       anop
+            ldx     status              ; otherwise return current status
             bra     bye
 ; scanner is jammed
 jammed      anop
             ldx     #$ffff              ; signal that the scanner is jammed
+            stx     status
 bye         anop
             ret
-
 ; getnum()
 ;
 ; collect digits to form an integer
@@ -163,7 +174,6 @@ getnum1     anop
             lda     #T_NUMBER           ; type = T_NUMBER
             sta     t_type
             rts
-
 ; getch()
 ;
 ; get the next word from the input stream. Increment column number.
@@ -185,6 +195,8 @@ getch       anop
 ; we've consumed all the input
 EOI         anop
             puts    #'End of input',CR=T
+            lda     #E_EOI
+            sta     status
             brl     done
             end     ; next
 ;
@@ -193,8 +205,8 @@ EOI         anop
 ; Output: Leaves the input pointer at the next non-whitespace char
 ;
 advance     start
-p_input     equ     0
-last_nl     equ     2
+p_input     equ     1
+last_nl     equ     3
 
             using   lexer_data
             csub    ,4
@@ -300,9 +312,9 @@ next_i1     anop
             sta     p_input
 next_k      lda     (p_keyword),y
             and     #$7f
- memory short
+            memory short
             cmp     (p_input),y
- memory long
+            memory long
             bne     next_i
             iny
             cpy     token_len
@@ -334,6 +346,7 @@ lexer_init  start
             lda     #1                  ; linenum = 1
             sta     linenum
             stz     colnum              ; col = 0
+            stz     status              ; status = OK
             pea     2
             lda     #keyindex
             pha
@@ -472,6 +485,7 @@ lexer_data  data
 ;
 ; lexer state
 ;
+status      dc      i2'0'               ; the lexer's current status
 ; thy input be here
 inputptr    dc      i4'0'
 ; current token info

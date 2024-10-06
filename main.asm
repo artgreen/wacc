@@ -1,10 +1,12 @@
 
-            list    on
+            list    off
             gen     on
             65816   on
             mcopy   2:ORCAInclude:m16.ORCA
             mcopy   2:ORCAInclude:m16.Tools
             mcopy   m16.utils.asm
+
+            copy    common.inc.asm
 
 main        start
             using   test_data
@@ -19,14 +21,16 @@ main        start
 
             pea     test_input
             jsl     lexer_init
-
+;             jsl     prnkeyindex
 again       jsl     next
-            cpx     #$ffff
+            cpx     #E_EOI
             beq     exit
+            cpx     #0
+            bne     abort
             jsl     prntoken
             bra     again
-            brk
 exit        anop
+            jsl     prntoken
             puts    #'All done',CR=T
             jsr     shutdown
             lda     #0              ; return 0
@@ -63,6 +67,13 @@ init        anop
 failed      anop
             rts
 
+;
+; dump input area
+;
+dumpinput   anop
+
+            rts
+
 shutdown    anop
 ; shut down heap (probably not necessary)
             jsl     ~MM_DISPOSEALL
@@ -86,7 +97,7 @@ bufferptr   dc      a'0'
             end
 
 test_data   data
-test_input  dc      c'  123456789  int main(void) { return 0; }',i1'0'
+test_input  dc      c'int main(void) { int var123; var123++; var123 = 12345; return 0; }',i1'0'
 ;test_input  dc      c'     ',i2'0'
             end     ; input_area
 
