@@ -121,8 +121,13 @@ getword1    anop
             brk
 worddone    anop
 ; set type here
+;             ton
             lda     #T_IDENT
             sta     t_type
+;             pea     t_end_ptr
+;             pea     t_start_ptr
+;             jsl     iskeyword
+;             brk
             rts
 
 ;
@@ -205,9 +210,8 @@ lexer_init  start
             lda     #1                  ; linenum = 1
             sta     linenum
             stz     colnum              ; col = 0
-
             pea     2
-            lda     inputptr
+            lda     #keyindex
             pha
             pea     48
             jsl     hexdump
@@ -267,8 +271,152 @@ found       anop
             sta     inputptr
             ret
             end     ; advance
+
+;
+iskeyword   start
+result      equ     0
+p_keyword   equ     2
+p_index     equ     4
+t_size      equ     6
+
+            using   lexer_data
+            csub    (2:p_start,2:p_end),10
+
+;             ton
+            lda     p_end
+            sec
+            sbc     p_start
+            dec     a
+            sta     t_size
+            lda     #keyindex
+            sta     p_index
+
+            ldy     #0
+c1          lda     (p_index),y
+            beq     nomatch
+            sta     result
+            sty     p_keyword
+            pha
+            jsl     SysCharOut
+            ldy     p_keyword
+            brk
+            bra     c1
+
+
+            ldy     #0
+cmpsize     lda     (p_index),y
+            beq     nomatch
+            sec
+            sbc     t_size
+            beq     docmp
+            tya
+            clc
+            adc     #6
+            tay
+            bra     cmpsize
+docmp       anop
+            iny                         ; move y to next index entry
+            iny
+            lda     (p_index),y         ; p_keyword = index ptr
+            sta     p_keyword
+            iny
+            iny
+            lda     (p_index),y         ; result = token code
+            sta     result
+            iny
+            iny
+            tyx
+            lda     #0
+            ldy     t_size
+cmpnext     anop
+            memory  short
+            lda     (p_keyword),y
+            lda     (p_start),y
+            memory  long
+            brk
+            bne     nomatch
+            brk
+
+nomatch     anop
+            lda     #0
+            sta     result
+            brk
+            ret     2:result
+            end     ; iskeyword
+
             trace   off
 
+*
+* prnkeyindex()
+*
+* prints out the keyword table
+*
+prnkeyindex start
+p_index     equ     1
+p_keyword   equ     3
+index_y     equ     5
+output      equ     7
+token_len   equ     9
+token_code  equ     11
+foo         equ     13
+            using   lexer_data
+
+            csub    ,15
+
+            lda     #keyindex
+            sta     p_index
+            ldy     #0
+            sty     index_y
+            lda     #50
+            sta     foo
+
+next_i      anop
+            ldy     index_y
+            lda     (p_index),y
+            bne     next_i1
+            brl     endindex
+
+next_i1     sta     token_len
+            sta     output
+
+            put2    output,#4
+            putc    #':'
+
+            ldy     index_y
+            iny
+            iny
+            lda     (p_index),y
+            sta     p_keyword
+            iny
+            iny
+            lda     (p_index),y
+            sta     token_code
+
+            iny
+            iny
+            sty     index_y
+            ldy     #0
+next_k      lda     (p_keyword),y
+            and     #$7f
+            pha
+            jsl     SysCharOut
+
+            iny
+            cpy     token_len
+            beq     done_k
+            bra     next_k
+
+done_k      anop
+            putc    #' '
+            put2    token_code,#2
+            putcr
+            brl     next_i
+endindex    anop
+            ret
+            end
+
+            trace off
+            list off
 prntoken    start
 p_input     equ     0
 p_end       equ     2
@@ -294,6 +442,11 @@ prn0        lda     (p_input)
             ret
             end
 
+*
+* prnstate()
+*
+* Prints the lexer's current state
+*
 prnstate    start
             using   lexer_data
             puts    #'lexer state: ip='
@@ -360,9 +513,8 @@ keyindex    anop
             token   'auto',4
             token   'long',4
             token   'goto',4
-            token   'for',3
             token   'int',3
-            token   'if',2
+            token   'for',3
             token   'do',2
             dc      i2'0'
 
