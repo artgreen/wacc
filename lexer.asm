@@ -358,54 +358,49 @@ index_y     equ     5
 output      equ     7
 token_len   equ     9
 token_code  equ     11
-foo         equ     13
             using   lexer_data
 
             csub    ,15
 
-            lda     #keyindex
-            sta     p_index
-            ldy     #0
+            lda     #keyindex           ; save a pointer to the index
+            sta     p_index             ; in p_index
+            ldy     #0                  ; index_y = 0
             sty     index_y
-            lda     #50
-            sta     foo
 
 next_i      anop
-            ldy     index_y
-            lda     (p_index),y
+            ldy     index_y             ; y = index_y
+            lda     (p_index),y         ; get next token len
             bne     next_i1
-            brl     endindex
+            brl     endindex            ; we're done if it is zero
 
-next_i1     sta     token_len
-            sta     output
+next_i1     sta     token_len           ; remember the token length
 
+            sta     output              ; print length
             put2    output,#4
             putc    #':'
 
-            ldy     index_y
+            ldy     index_y             ; y = index_y
+            iny                         ; point y at the keyword ptr
             iny
+            lda     (p_index),y         ; get the keyword addr
+            sta     p_keyword           ; save it in p_keyword
+            iny                         ; point y at the token code
             iny
-            lda     (p_index),y
-            sta     p_keyword
+            lda     (p_index),y         ; get the token code
+            sta     token_code          ; and store in token_code
+            iny                         ; move Y to point to the start
             iny
-            iny
-            lda     (p_index),y
-            sta     token_code
-
-            iny
-            iny
-            sty     index_y
+            sty     index_y             ; and remember it for later
+; print the keyword
             ldy     #0
 next_k      lda     (p_keyword),y
             and     #$7f
             pha
             jsl     SysCharOut
-
             iny
             cpy     token_len
             beq     done_k
             bra     next_k
-
 done_k      anop
             putc    #' '
             put2    token_code,#2
@@ -415,6 +410,11 @@ endindex    anop
             ret
             end
 
+*
+* prntoken()
+*
+* print the string pointed to by t_start_ptr
+*
             trace off
             list off
 prntoken    start
