@@ -40,7 +40,6 @@ abort       anop
             lda     #1
             rtl
 
-            trace on
 init        anop
 ; start up IO
             jsl     SystemEnvironmentInit
@@ -61,8 +60,6 @@ init        anop
             bcs     failed          ; ruh-roh
             stx     bufferbank      ; remember where our
             sta     bufferptr       ; memory is
-
-            trace   off
 
 failed      anop
             rts
