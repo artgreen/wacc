@@ -24,23 +24,22 @@ p_start     equ     3                   ; ptr to start of token
             csub    ,6
             stz     status              ; set result to a-ok
 ;             jsl     prnstate
-            jsl     advance
+            jsl     advance             ; go find the start of the next lexem
 ;             jsl     prnstate
-;  ton
             lda     inputptr            ; p_input = inputptr
             sta     p_input
             jsr     getch               ; get next char of input
             cmp     #0                  ; end of input?
-            bne     isdigit
-            brl     EOI
-; is number?
+            bne     isdigit             ; nope!
+            brl     EOI                 ; yep!
+; does this lexem start with a number?
 isdigit     cmp     #'0'
-            blt     isunder
+            blt     isunder             ; < '0'
             cmp     #':'
-            bge     isunder
-            jsr     getnum
+            bge     isunder             ; > '9'
+            jsr     getnum              ; go get us some numbers, boys!
             brl     done
-; does the next lexem start with an underscore?
+; does this lexem start with an underscore?
 ; if so, this has to be an identifier
 isunder     anop
             cmp     #'_'                ; is it an _
@@ -48,13 +47,13 @@ isunder     anop
 ; is this a alphabetic word
 isalpha     anop
             cmp     #'A'
-            blt     isop             ; is it less than A?
+            blt     isop                ; is it less than A?
             cmp     #'Z'+1              ; is it less than or equal to Z?
             blt     isword              ; yes, tis a word
             cmp     #'a'                ; is it less than a
-            blt     isop             ; nope, is it a punct?
+            blt     isop                ; nope, is it a punct?
             cmp     #'z'                ; less than z?
-            bgt     isop             ; fall through if less than z
+            bgt     isop                ; fall through if less than z
 isword      anop
             jsr     getalphanum
             brl     done
@@ -157,6 +156,7 @@ jammed      anop
             stx     status
 bye         anop
             ret
+;
 ; getnum()
 ;
 ; collect digits to form an integer
@@ -176,6 +176,7 @@ getnum1     anop
             lda     #T_NUMBER           ; type = T_NUMBER
             sta     t_type
             rts
+;
 ; getch()
 ;
 ; get the next word from the input stream. Increment column number.
