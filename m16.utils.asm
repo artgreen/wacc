@@ -46,6 +46,24 @@
 ~c&SYSCNT   anop
             mexit
 ;
+; compare A with &c1. if not equal, go to next compare.
+; if equal, compare with &c2:
+;   if equal, return &t2
+;   else return &t1
+;
+; cmps '-','>',#T_DEREF
+;
+            macro
+&lab        cmps    &c1,&c2,&t1
+~a&SYSCNT   cmp     #'&c1'
+            bne     ~z&SYSCNT
+            cpx     #'&c2'
+            bne     ~z&SYSCNT
+            lda     &t1
+            brl     fixinput
+~z&SYSCNT   anop
+            mexit
+;
 ; Return token code matching a three way compare
 ;
 ; cmp3 '+','+','=',#T_PLUS,#T_PLUSPLUS,#T_PLUSEQUAL
@@ -71,6 +89,42 @@
             brl     fixinput
 ~c&SYSCNT   anop
             lda     &t3
+            brl     fixinput
+~z&SYSCNT   anop
+            mexit
+
+;
+; Return token code matching a three way compare
+;
+; cmp4 '-','-','=','>',#T_DASH,#T_DASHDASH,#T_DASHEQUAL,#T_DEREF
+;
+            macro
+&lab        cmp4 &c,&c1,&c2,&c3,&t1,&t2,&t3,&t4
+~a&SYSCNT   anop
+; compare A vs c
+            cmp     #'&c'
+; not a match, move on
+            bne     ~z&SYSCNT
+; matched. now compare second char
+            cpx     #'&c1'
+            beq     ~b&SYSCNT
+; not a match, try c2
+            cpx     #'&c2'
+            beq     ~c&SYSCNT
+; not a match, try c3
+            cpx     #'&c3'
+            beq     ~d&SYSCNT
+; must be c
+            lda     &t1
+            brl     punctdone
+~b&SYSCNT   anop
+            lda     &t2
+            brl     fixinput
+~c&SYSCNT   anop
+            lda     &t3
+            brl     fixinput
+~d&SYSCNT   anop
+            lda     &t4
             brl     fixinput
 ~z&SYSCNT   anop
             mexit

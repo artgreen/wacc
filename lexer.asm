@@ -44,7 +44,7 @@ isdigit     cmp     #'0'
 isunder     anop
             cmp     #'_'                ; is it an _
             beq     isword              ; yes, has to be an identifier
-; is this a alphabetic word
+; does this lexem start with an alpha?
 isalpha     anop
             cmp     #'A'
             blt     isop                ; is it less than A?
@@ -57,15 +57,15 @@ isalpha     anop
 isword      anop
             jsr     getalphanum
             brl     done
-; is this punctuation
+; is this an operator
 isop        anop
             cmp1 ';',#T_SEMI
             cmp1 '(',#T_LPAREN
             cmp1 ')',#T_RPAREN
             cmp1 '{',#T_LCURLY
             cmp1 '}',#T_RCURLY
+            cmp4 '-','-','=','>',#T_DASH,#T_DASHDASH,#T_DASHEQUAL,#T_DEREF
             cmp3 '+','+','=',#T_PLUS,#T_PLUSPLUS,#T_PLUSEQUAL
-            cmp3 '-','-','=',#T_DASH,#T_DASHDASH,#T_DASHEQUAL
             cmp3 '&','&','=',#T_AND,#T_ANDAND,#T_ANDEQUAL
             cmp3 '|','|','=',#T_BAR,#T_BARBAR,#T_BAREQUAL
             cmp3 '<','<','=',#T_LESSTHAN,#T_LSHIFT,#T_LTEQUAL
@@ -84,6 +84,7 @@ isop        anop
             cmp1 '[',#T_LBRACKET
             cmp1 ']',#T_RBRACKET
             cmp1 '#',#T_HASH
+; is this a string
 ; set status to unknown char
             ldx     #E_UNKNOWN
             stx     status
@@ -352,6 +353,12 @@ lexer_init  start
             stz     status              ; status = OK
             pea     2
             lda     #keyindex
+            pha
+            pea     48
+            jsl     hexdump
+
+            pea     2
+            lda     inputptr
             pha
             pea     48
             jsl     hexdump
