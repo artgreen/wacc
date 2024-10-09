@@ -94,7 +94,7 @@ bufferptr   dc      a'0'
             end
 
 test_data   data
-test_input  dc      c'int main(void) { int var123; int *p; p->v = 1; var123++; var123 = 12345; return 0; }',i1'0'
+test_input  dc      c'int main(void) { int var123; p = ''a''; int *p; p->v = 1; var123++; var123 = 12345; return 0; }',i1'0'
 ;test_input  dc      c'     ',i2'0'
             end     ; input_area
 

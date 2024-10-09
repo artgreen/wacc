@@ -84,7 +84,12 @@ isop        anop
             cmp1 '[',#T_LBRACKET
             cmp1 ']',#T_RBRACKET
             cmp1 '#',#T_HASH
+            cmp  #39            ; can't get ' to work with the cmp1 macro
+            bne  isstring
+            lda  #T_SNGQUOTE
+            brl  punctdone
 ; is this a string
+isstring    anop
 ; set status to unknown char
             ldx     #E_UNKNOWN
             stx     status
@@ -360,7 +365,7 @@ lexer_init  start
             pea     2
             lda     inputptr
             pha
-            pea     48
+            pea     64
             jsl     hexdump
             ret
             end     ; lexer_init
