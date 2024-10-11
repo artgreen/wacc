@@ -34,10 +34,14 @@ p_start     equ     3                   ; ptr to start of token
             brl     EOI                 ; yep!
 ; does this lexem start with a number?
 isdigit     cmp     #'0'
-            blt     isunder             ; < '0'
+            blt     isstring            ; < '0'
             cmp     #':'
-            bge     isunder             ; > '9'
+            bge     isstring            ; > '9'
             jsr     getnum              ; go get us some numbers, boys!
+            brl     done
+isstring    cmp     #'"'
+            bne     isunder
+            jsr     getstring
             brl     done
 ; does this lexem start with an underscore?
 ; if so, this has to be an identifier
@@ -85,15 +89,33 @@ isop        anop
             cmp1 ']',#T_RBRACKET
             cmp1 '#',#T_HASH
             cmp  #39            ; can't get ' to work with the cmp1 macro
-            bne  isstring
+            bne  unknown
             lda  #T_SNGQUOTE
             brl  punctdone
 ; is this a string
-isstring    anop
+; isstring    anop
+;             ton
+;             cmp     #'"'
+;             sta     $1
+;             brk
+;             bne     unknown
+;             ldy     p_input             ; t_end_ptr = inputptr
+;             sty     t_end_ptr
+;             inc     p_input             ; inputptr++
+;             jsr     getch               ; get next char
+;             ton
+;             sta     $1
+;             stx     $1
+;             brk
+;             bne     x1
+;             lda     #E_JAMMED
+;             sta     status
+;             brl     done
+; x1          anop
 ; set status to unknown char
-            ldx     #E_UNKNOWN
+unknown     ldx     #E_UNKNOWN
             stx     status
-            bra     iseoi
+            brl     iseoi
 ; fix pointers because we sucked up an extra char
 ; note: column number gets repaired in advance()
 fixinput    anop
@@ -104,6 +126,17 @@ punctdone   anop
             inc     p_input             ; advance input ptr
             sta     t_type              ; save the token type
             brl     done
+; getstring()
+;
+; collect a string from input
+;
+getstring   anop
+            ldy     p_input             ; t_end_ptr = inputptr
+            sty     t_end_ptr
+            inc     p_input             ; inputptr++
+            jsr     getch               ; get next
+
+            rts
 ;
 ; getalphanum()
 ;
@@ -132,7 +165,7 @@ getword1    anop
 ; we shouldn't get here
             ldx     #E_FATAL
             stx     status
-            bra     iseoi
+            brl     iseoi
             brk
 worddone    anop
 ; look up if this is a keyword or not
@@ -148,6 +181,8 @@ done        anop
             lda     status              ; get lexer status
             cmp     #E_EOI              ; are we at the end of input?
             beq     iseoi               ; yup
+            cmp     #E_JAMMED
+            beq     jammed
             cmp     #0                  ; status is ok?
             bne     iseoi               ; nope, preserve status code
             lda     inputptr            ; if inputptr == startptr, we're jammed
@@ -158,6 +193,7 @@ iseoi       anop
             bra     bye
 ; scanner is jammed
 jammed      anop
+            putc    #'Jammed'
             ldx     #E_JAMMED           ; signal that the scanner is jammed
             stx     status
 bye         anop
@@ -192,6 +228,7 @@ getnum1     anop
 ;   notes:          Y is not preserved
 ;
 getch       anop
+;  ton
             inc     colnum              ; col ++
             lda     (p_input)           ; get char
             tay                         ; save in Y
@@ -199,7 +236,8 @@ getch       anop
             and     #$7f                ; clear top 8 bits
             tax                         ; save look ahead in X
             tya                         ; restore C
-            and     #$7f                ; clear top 8 bites
+            and     #$7f                ; clear top 8 bits
+nope        anop
             rts
 ; we've consumed all the input
 EOI         anop
@@ -365,7 +403,7 @@ lexer_init  start
             pea     2
             lda     inputptr
             pha
-            pea     64
+            pea     256
             jsl     hexdump
             ret
             end     ; lexer_init
