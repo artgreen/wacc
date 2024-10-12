@@ -157,6 +157,26 @@ worddone    anop
             jsl     iskeyword
             rts
 ;
+; getnum()
+;
+; collect digits to form an integer
+;
+;
+getnum      anop
+            lda     p_input             ; t_end_ptr = inputptr
+            sta     t_end_ptr
+            inc     p_input             ; inputptr++
+            jsr     getch               ; is the next char a digit?
+            cmp     #'0'
+            bcc     getnum1             ; nope, we're done
+            cmp     #':'
+            bcs     getnum1             ; nope, we're done
+            bra     getnum              ; yes, eat more
+getnum1     anop
+            lda     #T_NUMBER           ; type = T_NUMBER
+            sta     t_type
+            rts
+;
 ; finish up this round of scanning
 ; return result of scanning in X
 ;
@@ -183,26 +203,6 @@ jammed      anop
             stx     status
 bye         anop
             ret
-;
-; getnum()
-;
-; collect digits to form an integer
-;
-;
-getnum      anop
-            lda     p_input             ; t_end_ptr = inputptr
-            sta     t_end_ptr
-            inc     p_input             ; inputptr++
-            jsr     getch               ; is the next char a digit?
-            cmp     #'0'
-            bcc     getnum1             ; nope, we're done
-            cmp     #':'
-            bcs     getnum1             ; nope, we're done
-            bra     getnum              ; yes, eat more
-getnum1     anop
-            lda     #T_NUMBER           ; type = T_NUMBER
-            sta     t_type
-            rts
 ;
 ; getch()
 ;
@@ -286,7 +286,6 @@ found       anop
             sta     inputptr
             ret
             end     ; advance
-
 ;
 ; iskeyword()
 ;
@@ -360,8 +359,6 @@ end_i       anop
 bye         anop
             ret
             end     ; iskeyword
-
-
 ;
 ; Initialize the lexer
 ; Input: pointer to input area on stack
@@ -392,7 +389,6 @@ lexer_init  start
             jsl     hexdump
             ret
             end     ; lexer_init
-
 ;
 ; prnkeyindex()
 ;
@@ -456,7 +452,6 @@ done_k      anop
 endindex    anop
             ret
             end     ;prnkeyindex
-
 ;
 ; prntoken()
 ;
@@ -491,7 +486,6 @@ prn0        lda     (p_input)
             putcr
             ret
             end     ; prntoken
-
 ;
 ; prnstate()
 ;
