@@ -249,7 +249,6 @@ bye         anop
 ;   notes:          Y is not preserved
 ;
 getch       anop
-;  ton
             inc     colnum              ; col ++
             lda     (p_input)           ; get char
             tay                         ; save in Y
