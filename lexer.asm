@@ -92,26 +92,6 @@ isop        anop
             bne  unknown
             lda  #T_SNGQUOTE
             brl  punctdone
-; is this a string
-; isstring    anop
-;             ton
-;             cmp     #'"'
-;             sta     $1
-;             brk
-;             bne     unknown
-;             ldy     p_input             ; t_end_ptr = inputptr
-;             sty     t_end_ptr
-;             inc     p_input             ; inputptr++
-;             jsr     getch               ; get next char
-;             ton
-;             sta     $1
-;             stx     $1
-;             brk
-;             bne     x1
-;             lda     #E_JAMMED
-;             sta     status
-;             brl     done
-; x1          anop
 ; set status to unknown char
 unknown     ldx     #E_UNKNOWN
             stx     status
@@ -135,7 +115,12 @@ getstring   anop
             sty     t_end_ptr
             inc     p_input             ; inputptr++
             jsr     getch               ; get next
-
+            cmp     #'"'                ; is it a double quote?
+            bne     getstring           ; nope, slurp up more
+            inc     p_input             ; inputptr++
+            inc     t_end_ptr
+            lda     #T_STRING
+            sta     t_type
             rts
 ;
 ; getalphanum()
