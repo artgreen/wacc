@@ -51,7 +51,7 @@
 ;   if equal, return &t2
 ;   else return &t1
 ;
-; cmps '-','>',#T_DEREF
+; cmps '/','/',#T_LINECMT
 ;
             macro
 &lab        cmps    &c1,&c2,&t1

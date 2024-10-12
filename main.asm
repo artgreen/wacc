@@ -94,7 +94,6 @@ bufferptr   dc      a'0'
             end
 
 test_data   data
-test_input  dc      c'int main(void) { int var123; p = ''a''; int *p; printf("%s\n", "string here"); p->v = 1; var123++; var123 = 12345; return 0; }',i1'0'
-;test_input  dc      c'     ',i2'0'
+test_input  dc      c'int main(void)',i1'13',c'{ int var123; p = ''a''; int *p; printf("%s\n", "string here"); // Foo line',i1'13',c'p->v = 1; var123++; var123 = 12345; /*hi*/ return 0; } // Fin',i1'0'
             end     ; input_area
 

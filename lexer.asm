@@ -39,9 +39,9 @@ isdigit     cmp     #'0'
             bge     isstring            ; > '9'
             jsr     getnum              ; go get us some numbers, boys!
             brl     done
-isstring    cmp     #'"'
+isstring    cmp     #'"'                ; is this the start of a string?
             bne     isunder
-            jsr     getstring
+            jsr     getstring           ; yep, go get it
             brl     done
 ; does this lexem start with an underscore?
 ; if so, this has to be an identifier
@@ -68,6 +68,8 @@ isop        anop
             cmp1 ')',#T_RPAREN
             cmp1 '{',#T_LCURLY
             cmp1 '}',#T_RCURLY
+            cmps '/','*',#T_STARTCMT
+            cmps '/','/',#T_LINECMT
             cmp4 '-','-','=','>',#T_DASH,#T_DASHDASH,#T_DASHEQUAL,#T_DEREF
             cmp3 '+','+','=',#T_PLUS,#T_PLUSPLUS,#T_PLUSEQUAL
             cmp3 '&','&','=',#T_AND,#T_ANDAND,#T_ANDEQUAL
@@ -103,9 +105,41 @@ fixinput    anop
             inc     t_end_ptr           ; adjust the end of the token
 ; advance pointer, store type and exit
 punctdone   anop
-            inc     p_input             ; advance input ptr
             sta     t_type              ; save the token type
+            cmp     #T_STARTCMT         ; is this the start of a comment?
+            beq     getcomment          ; yep go get it
+            cmp     #T_LINECMT          ; is this the start of a // comment?
+            beq     getlinecmt          ; yes
+punctdone1  inc     p_input             ; advance input ptr
             brl     done
+getlinecmt  anop
+            ldy     p_input             ; t_end_ptr = inputptr
+            sty     t_end_ptr
+            inc     p_input             ; inputptr++
+            jsr     getch               ; get next
+            bne     getlinecmt1         ; end of input?
+            brl     done                ; yup
+getlinecmt1 cmp     #13                 ; is this a newline?
+            bne     getlinecmt          ; nope, eat more
+            inc     p_input             ; don't adjust t_end_ptr to eat nl
+            brl     done
+getcomment  anop
+            ldy     p_input             ; t_end_ptr = inputptr
+            sty     t_end_ptr
+            inc     p_input             ; inputptr++
+            jsr     getch               ; get next
+            bne     getcomment1         ; end of input?
+            brl     jammed              ; yup
+getcomment1 cmp     #'*'                ; start of end comment token?
+            bne     getcomment          ; nope, eat more
+            cpx     #'/'                ; end of comment?
+            bne     getcomment          ; nope, eat more
+            inc     p_input             ; fix inputptr
+            inc     t_end_ptr           ; adjust the end of the token
+            inc     p_input
+            inc     t_end_ptr
+            brl     done
+;
 ; getstring()
 ;
 ; collect a string from input
@@ -115,7 +149,9 @@ getstring   anop
             sty     t_end_ptr
             inc     p_input             ; inputptr++
             jsr     getch               ; get next
-            cmp     #'"'                ; is it a double quote?
+            bne     getstring1          ; EOI?
+            brl     jammed              ; YEP
+getstring1  cmp     #'"'                ; is it a double quote?
             bne     getstring           ; nope, slurp up more
             inc     p_input             ; inputptr++
             inc     t_end_ptr
@@ -198,7 +234,7 @@ iseoi       anop
             bra     bye
 ; scanner is jammed
 jammed      anop
-            putc    #'Jammed'
+            puts    #'Jammed',CR=T
             ldx     #E_JAMMED           ; signal that the scanner is jammed
             stx     status
 bye         anop
