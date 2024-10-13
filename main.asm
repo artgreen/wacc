@@ -4,6 +4,7 @@
             65816   on
             mcopy   2:ORCAInclude:m16.ORCA
             mcopy   2:ORCAInclude:m16.Tools
+            mcopy   2:ORCAInclude:m16.GS.OS
             mcopy   m16.utils.asm
 
             copy    common.inc.asm
@@ -21,6 +22,9 @@ main        start
 
             pea     test_input
             jsl     lexer_init
+            bcs     abort
+            jsr     openfile
+            bcs     openfail
 ;             jsl     prnkeyindex
 again       jsl     next
             cpx     #E_EOI
@@ -35,6 +39,8 @@ exit        anop
             jsr     shutdown
             lda     #0              ; return 0
             rtl
+openfail    anop
+            puts    #'File open failed',CR=T
 abort       anop
             puts    #'Abort...',CR=T
             lda     #1
@@ -83,10 +89,28 @@ shutdown    anop
             jsl     SysIOShutDown
 ; sleepy time
             rts
-
             end     ; main
 
+;
+; open a file
+;
+openfile    start
+            using   common
+            open    open_pbc
+            rts
+            end     ; openfile
+
 common      data
+open_pbc    anop
+o_ref_num   ds      2
+o_path_name dc      i4'filename'
+o_io_buf    ds      4
+
+
+filename    dw      'test1.c'            ; test input file
+
+io_buffer   dc      i4'0'
+
 max_input   dc      i2'1024'            ; max input size
 userid      dc      i2'0'               ; our user id
 bufferbank  dc      i2'0'               ; address of input area
