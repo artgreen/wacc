@@ -130,7 +130,7 @@ r_buffer    dc      a4'io_buffer'
 r_want      dc      i4'1024'
 r_got       dc      i4'0'
 
-filename    dw      'test1.c'            ; test input file name
+filename    dw      'test.c'            ; test input file name
 
 hexstring   dw      '0000'
 
