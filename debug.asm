@@ -14,3 +14,36 @@ hexdump     start
             jsl     $e10000
             ret
             end     ; hexdump
+
+;================================================================================
+;
+;binhex: CONVERT BINARY BYTE TO HEX ASCII CHARS
+;
+;   ————————————————————————————————————
+;   Preparatory Ops: .A: byte to convert
+;
+;   Returned Values: .A: MSN ASCII char
+;                    .X: LSN ASCII char
+;                    .Y: entry value
+;   ————————————————————————————————————
+; Thanks to BigDumbDinosaur 6502.org
+binhex      start
+            pha                     ; save
+            and     #$0F            ; mask
+            tax                     ; save
+            pla                     ; recover first
+            lsr     a
+            lsr     a
+            lsr     a
+            lsr     a
+            pha                     ; save msn
+            txa                     ; LSN
+            jsl     binhex1
+            tax
+            pla
+binhex1     cmp     #$0a
+            bcc     binhex2
+            adc     #$66
+binhex2     eor     #%00110000
+            rtl
+            end     ; binhex
