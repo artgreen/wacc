@@ -292,7 +292,6 @@ skipwhite   lda     (p_input)
             beq     space
             bra     notwhite            ; not a space
 space       inc     p_input             ; was a space
-
             bra     skipwhite           ; ignore it
 notwhite    anop
             lda     p_input             ; startptr = inputptr
@@ -307,7 +306,7 @@ notwhite    anop
             lda     t_start_ptr         ; last_nl = startptr
             sta     last_nl
             inc     p_input             ; inputptr++
-            bra     notwhite           ; and try again
+            bra     skipwhite           ; and try again
 found       anop
             lda     t_start_ptr         ; calculate column num
             sta     t_end_ptr
