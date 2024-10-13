@@ -145,8 +145,4 @@ userid      dc      i2'0'               ; our user id
 bufferbank  dc      i2'0'               ; address of input area
 bufferptr   dc      a'0'
             end
-;
-; test_data   data
-; test_input  dc      c'int main(void)',i1'13',c'{ int var123; p = ''a''; int *p; printf("%s\n", "string here"); // Foo line',i1'13',c'p->v = 1; var123++; var123 = 12345; /*hi*/ return 0; } // Fin',i1'0'
-;             end     ; input_area
 
