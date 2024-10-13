@@ -50,12 +50,17 @@ openfail    anop
             stx     openmsgend-1
             puts    openmsg-1,CR=T
 abort       anop
-
-            puts    #'Abort...',CR=T
+            txa
+            jsl     binhex
+            sta     abortmsgend-2
+            stx     abortmsgend-1
+            puts    abortmsg-1,CR=T
             lda     #1
             rtl
 openmsg     dw      'File open failed: $00'
 openmsgend  anop
+abortmsg    dw      'Abort... $00'
+abortmsgend anop
 
 init        anop
 ; start up IO
