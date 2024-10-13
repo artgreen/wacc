@@ -411,19 +411,18 @@ lexer_init  start
             sta     linenum
             stz     colnum              ; col = 0
             stz     status              ; status = OK
-            pea     2
-            lda     #keyindex
-            pha
-            pea     48
-            jsl     hexdump
+            ret
+            end     ; lexer_init
 
+l_dumpinput start
+            using   lexer_data
             pea     2
             lda     inputptr
             pha
             pea     256
             jsl     hexdump
-            ret
-            end     ; lexer_init
+            rtl
+            end     ; l_prninput
 ;
 ; prnkeyindex()
 ;
