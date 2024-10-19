@@ -1,6 +1,34 @@
 *
 * Token codes
 *
+*[Category Flags (4 bits) ] [ Sub-category Flags (4 bits) ] [ Token Value (8 bits)]
+* Bit Index: 15 14 13 12   | 11 10  9  8   |   7  6  5  4  3  2  1  0
+*
+* Major Category Bit Patterns (Bits 15-12)
+C_OPER      GEQU    $0
+C_FLOW      GEQU    $1000
+C_DATA_TYPE GEQU    $2000
+C_KEYWORD   GEQU    $3000
+
+C_LITERAL   GEQU    $4000
+S_INT       GEQU    $0000
+S_FLOAT     GEQU    $0100
+S_STRING    GEQU    $0200
+T_STRING    GEQU    $4301
+
+
+C_SPECIAL   GEQU    $5000
+C_LOGICAL   GEQU    $6000
+C_COMPARE   GEQU    $7000
+C_ASSIGN    GEQU    $8000
+C_BITWISE   GEQU    $9000
+C_ACCESS    GEQU    $A000
+C_PREPROCES GEQU    $B000
+C_COMMENTS  GEQU    $C000
+C_BRACKETS  GEQU    $D000
+C_SEPDELIMS GEQU    $E000
+C_RESERVED  GEQU    $F000
+
 T_AUTO      GEQU    $1
 T_BREAK     GEQU    $2
 T_CASE      GEQU    $3
@@ -85,4 +113,4 @@ T_SNGQUOTE  GEQU    $55
 T_STARTCMT  GEQU    $56
 T_ENDCMT    GEQU    $57
 T_LINECMT   GEQU    $58
-T_STRING    GEQU    $59
+
