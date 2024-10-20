@@ -10,18 +10,18 @@
             copy    common.inc.asm
 
 main        start
-;             using   test_data
             using   common
             memory  long
             index   long
 
             phk
             plb
+
             jsr     init
             bcc     main0
             brl     abort
-main0       pea     io_buffer
-;   ton
+main0       anop
+            ph4     io_ptr
             jsl     lexer_init
             bcc     main1
             brl     abort
@@ -29,7 +29,10 @@ main1       jsr     openfile
             bcs     openfail
             jsl     l_dumpinput
 ;             jsl     prnkeyindex
-again       jsl     next
+again       anop
+            jsl     prnstate
+
+            jsl     next
             cpx     #E_EOI
             beq     exit
             cpx     #0
@@ -73,6 +76,7 @@ init        anop
             ora     #$0100          ; set aux id field to 1
             sta     ~USER_ID        ; save this user id
             sta     userid
+
 ; init the heap and get us some ram for input
             jsl     ~MM_INIT        ; initialize the heap manager
             ph2     0               ; low word of size
@@ -80,19 +84,13 @@ init        anop
             pha                     ; push onto stack
             jsl     ~NEW            ; ask for it
             bcs     failed          ; ruh-roh
-            stx     bufferbank      ; remember where our
-            sta     bufferptr       ; memory is
-
+            sta     io_ptr          ; remember where our
+            sta     r_buffer
+            stx     io_ptr+2        ; memory is
+            stx     r_buffer+2
 failed      anop
+            ldx     #E_NOMEM
             rts
-
-;
-; dump input area
-;
-dumpinput   anop
-
-            rts
-
 shutdown    anop
 ; shut down heap (probably not necessary)
             jsl     ~MM_DISPOSEALL
@@ -114,6 +112,7 @@ openfile    start
             using   common
             open    open_pcb
             bcs     exit
+
             lda     o_ref_num
             sta     r_ref_num
             read    read_pcb
@@ -131,18 +130,14 @@ o_io_buf    ds      4                   ; I/O buffer
 
 read_pcb    anop
 r_ref_num   ds      2                   ; reference number
-r_buffer    dc      a4'io_buffer'
+r_buffer    dc      i4'0'
 r_want      dc      i4'1024'
 r_got       dc      i4'0'
 
 filename    dw      'test.c'            ; test input file name
-
 hexstring   dw      '0000'
-
-io_buffer   ds      1024
+io_ptr      dc      i4'$FFFFffff'       ; pointer to malloc'ed i/o area
 max_input   dc      i2'1024'            ; max input size
 userid      dc      i2'0'               ; our user id
-bufferbank  dc      i2'0'               ; address of input area
-bufferptr   dc      a'0'
             end
 
