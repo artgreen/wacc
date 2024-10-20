@@ -181,3 +181,25 @@
 &LAB    SEP     #%00100000
         LONGA   OFF
         MEND
+
+;
+; compare A with &c1. if not equal, go to next compare,
+; otherwise load token code &t1 and exit
+;
+; cmp1 '{',#T_LCURLY
+;
+            macro
+&lab        dump    &a1,&l1
+~a&SYSCNT   lda     #>&a1
+            xba
+            and     #$7f
+            pha
+            lda     #<&a1
+            pha
+            pea     &l1
+            jsl     hexdump
+~z&SYSCNT   anop
+            mexit
+
+
+
