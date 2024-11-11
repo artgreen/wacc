@@ -79,10 +79,7 @@ init        anop
 
 ; init the heap and get us some ram for input
             jsl     ~MM_INIT        ; initialize the heap manager
-            ph2     0               ; low word of size
-            lda     max_input       ; high word of size (<=$ffff total)
-            pha                     ; push onto stack
-            jsl     ~NEW            ; ask for it
+            malloc  max_input
             bcs     failed          ; ruh-roh
             sta     io_ptr          ; remember where our
             sta     r_buffer
