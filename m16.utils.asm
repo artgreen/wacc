@@ -186,7 +186,7 @@
 ; compare A with &c1. if not equal, go to next compare,
 ; otherwise load token code &t1 and exit
 ;
-; cmp1 '{',#T_LCURLY
+; dump $1000,256
 ;
             macro
 &lab        dump    &a1,&l1
@@ -201,5 +201,17 @@
 ~z&SYSCNT   anop
             mexit
 
+;
+; allocate memory from the heap.  assumes MM has been INITed
+; amount is always <= $FFFF
+;
+                macro
+&lab            malloc  &len
+                lda     #0
+                pha
+                lda     &len
+                pha
+                jsl     ~NEW
+                mexit
 
 
